@@ -1,4 +1,4 @@
-# import asyncio
+import asyncio
 
 # from pymodbus.client import AsyncModbusTcpClient
 # from config import NetData
@@ -24,10 +24,18 @@
 #     asyncio.run(main())
 
 
+from sqlalchemy import select 
+from sqlalchemy.ext.asyncio import create_async_engine
+from db.models import User
+from config import settings
 
-from sqlalchemy import text
-from db.database import engine
 
-with engine.connect() as conn:
-    res = conn.execute(text("SELECT VERSION()"))
-    print(res)
+async def db_connection():
+    engine = create_async_engine(settings.sqlite_async_dsn, echo=True)
+    async with engine.begin() as conn:
+        stmt = select(User)
+        res = await conn.execute(stmt)
+        print(res)
+
+
+asyncio.run(db_connection())

@@ -7,9 +7,11 @@ from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram_dialog import setup_dialogs
 from redis.asyncio import Redis
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from config import TOKEN
+from config import settings
 from custom.media_storage import MediaIdStorage
+from middlewares import DbSessionMiddleware
 
 
 async def main():
@@ -17,7 +19,13 @@ async def main():
         level=logging.WARNING,
         format="%(asctime)s %(levelname)s %(message)s",
     )
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
+    engine = create_async_engine(settings.sqlite_async_dsn, echo=False)
+    db_pool = async_sessionmaker(engine, expire_on_commit=False)
+
+    bot = Bot(
+        token=settings.bot_token.get_secret_value(),
+        default=DefaultBotProperties(parse_mode="HTML"),
+    )
     storage = RedisStorage(
         Redis(),
         key_builder=DefaultKeyBuilder(
@@ -27,6 +35,8 @@ async def main():
     )
     dp = Dispatcher(storage=storage)
     setup_dialogs(dp, media_id_storage=MediaIdStorage())
+    dp.update.outer_middleware(DbSessionMiddleware(db_pool))
+
     await bot.delete_webhook(drop_pending_updates=True)
     dp.startup()
     await dp.start_polling(bot)
