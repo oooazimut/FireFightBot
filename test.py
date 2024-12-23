@@ -28,6 +28,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine
 from db.models import User
 from config import settings
+from jobs import poll_and_save
 
 
 async def db_connection():
@@ -38,4 +39,5 @@ async def db_connection():
         print(res)
 
 
-asyncio.run(db_connection())
+
+asyncio.run(poll_and_save())

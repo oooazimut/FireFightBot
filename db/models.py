@@ -14,6 +14,9 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
+    def __repr__(self) -> str:
+        return f"User(id={self.id!r}, name={self.name!r})"
+
 
 class Pressure(Base):
     __tablename__ = "pressures"
@@ -21,8 +24,12 @@ class Pressure(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     value: Mapped[float]
     dttm: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True),
+        server_default=func.now(),
     )
+
+    def __repr__(self) -> str:
+        return f"Pressure(id={self.id!r}, value={self.value!r}, dttm={self.dttm!r})"
 
 
 class WaterLevel(Base):
@@ -31,5 +38,9 @@ class WaterLevel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     value: Mapped[float]
     dttm: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
+        DateTime(timezone=True),
+        server_default=func.now(),
     )
+
+    def __repr__(self) -> str:
+        return f"WaterLevel(id={self.id!r}, value={self.value!r}, dttm={self.dttm!r})"
