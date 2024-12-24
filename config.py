@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     bot_token: SecretStr
     db_name: str
     modbus: ModbusSettings
+    password: SecretStr
+
 
     @property
     def sqlite_async_dsn(self):

@@ -1,11 +1,15 @@
 from datetime import datetime
-from sqlalchemy import DateTime, func
+from typing import Annotated
+
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
+
+
+dttm = Annotated[datetime, mapped_column(default=datetime.now().replace(microsecond=0))]
 
 
 class User(Base):
@@ -23,10 +27,7 @@ class Pressure(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     value: Mapped[float]
-    dttm: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
+    dttm: Mapped[dttm]
 
     def __repr__(self) -> str:
         return f"Pressure(id={self.id!r}, value={self.value!r}, dttm={self.dttm!r})"
@@ -37,10 +38,7 @@ class WaterLevel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     value: Mapped[float]
-    dttm: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
+    dttm: Mapped[dttm]
 
     def __repr__(self) -> str:
         return f"WaterLevel(id={self.id!r}, value={self.value!r}, dttm={self.dttm!r})"

@@ -26,18 +26,19 @@ import asyncio
 
 from sqlalchemy import select 
 from sqlalchemy.ext.asyncio import create_async_engine
-from db.models import User
+from sqlalchemy.ext.asyncio.session import async_sessionmaker
+from db.models import User, WaterLevel
 from config import settings
 from jobs import poll_and_save
 
 
 async def db_connection():
     engine = create_async_engine(settings.sqlite_async_dsn, echo=True)
-    async with engine.begin() as conn:
-        stmt = select(User)
-        res = await conn.execute(stmt)
-        print(res)
+    db_pool = async_sessionmaker(engine)
+    async with db_pool() as session:
+        stmt = select(WaterLevel).order_by(WaterLevel.id.desc()).limit(1)
+        curr_level = await session.scalar(stmt)
 
 
 
-asyncio.run(poll_and_save())
+asyncio.run(db_connection())
