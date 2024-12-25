@@ -1,15 +1,17 @@
 import logging
 
-from pymodbus import ModbusException, pymodbus_apply_logging_config
+from pymodbus import ModbusException
 from pymodbus.client import ModbusBaseClient
 
 logger = logging.getLogger(__name__)
 
 
 async def poll_registers(client: ModbusBaseClient, address, count) -> list | None:
-    pymodbus_apply_logging_config(logging.WARNING)
     await client.connect()
-    assert client.connected, "Нет соединения с ПР-103"
+    if not client.connected:
+        logger.error("Нет соединения с ПР-103")
+        client.close()
+        return
     try:
         data = await client.read_holding_registers(address, count=count)
     except ModbusException as exc:

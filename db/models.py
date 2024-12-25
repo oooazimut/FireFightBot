@@ -9,7 +9,8 @@ class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
-dttm = Annotated[datetime, mapped_column(default=datetime.now().replace(microsecond=0))]
+dttm = Annotated[datetime, mapped_column(default=datetime.now)]
+classic_id = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 
 
 class User(Base):
@@ -25,7 +26,7 @@ class User(Base):
 class Pressure(Base):
     __tablename__ = "pressures"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[classic_id]
     value: Mapped[float]
     dttm: Mapped[dttm]
 
@@ -36,9 +37,20 @@ class Pressure(Base):
 class WaterLevel(Base):
     __tablename__ = "water_levels"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    id: Mapped[classic_id]
     value: Mapped[float]
     dttm: Mapped[dttm]
 
     def __repr__(self) -> str:
         return f"WaterLevel(id={self.id!r}, value={self.value!r}, dttm={self.dttm!r})"
+
+
+class PumpCondition(Base):
+    __tablename__ = "pump_condition"
+
+    id: Mapped[classic_id]
+    condition: Mapped[int]
+    dttm: Mapped[dttm]
+
+    def __repr__(self) -> str:
+        return f"PumpCondition(id={self.id!r}, condition={self.condition!r}, dttm={self.dttm!r})"

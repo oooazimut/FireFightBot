@@ -3,18 +3,29 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
+from aiogram.filters import ExceptionTypeFilter
 from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.redis import RedisStorage
-from aiogram_dialog import setup_dialogs
+from aiogram.types import ErrorEvent
+from aiogram_dialog import DialogManager, StartMode, setup_dialogs
+from aiogram_dialog.api.exceptions import OutdatedIntent, UnknownIntent
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pymodbus.client import AsyncModbusTcpClient
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+import dialogs
 from config import settings
 from custom.media_storage import MediaIdStorage
-from middlewares import DbSessionMiddleware
 from jobs import poll_and_save
+from middlewares import DbSessionMiddleware
+from routers import start_router
+from states import MainSG
+
+
+async def ui_error_handler(event: ErrorEvent, dialog_manager: DialogManager):
+    logging.warning("Сброс ошибки: {event}")
+    await dialog_manager.start(state=MainSG.main, mode=StartMode.RESET_STACK)
 
 
 async def main():
@@ -22,7 +33,7 @@ async def main():
         level=logging.WARNING,
         format="%(asctime)s %(levelname)s %(message)s",
     )
-    engine = create_async_engine(settings.sqlite_async_dsn, echo=True)
+    engine = create_async_engine(settings.sqlite_async_dsn, echo=False)
     db_pool = async_sessionmaker(engine, expire_on_commit=False)
     client = AsyncModbusTcpClient(
         settings.modbus.host,
@@ -50,9 +61,13 @@ async def main():
         ),
     )
     dp = Dispatcher(storage=storage)
+    dp.include_routers(start_router, dialogs.main)
     setup_dialogs(dp, media_id_storage=MediaIdStorage())
     dp.update.outer_middleware(DbSessionMiddleware(db_pool))
-
+    dp.errors.register(
+        ui_error_handler,
+        ExceptionTypeFilter(UnknownIntent, OutdatedIntent),
+    )
     await bot.delete_webhook(drop_pending_updates=True)
     dp.startup()
     await dp.start_polling(bot)

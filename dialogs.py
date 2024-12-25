@@ -31,7 +31,7 @@ main = Dialog(
     ),
     Window(
         Const('Текущий уровень:'),
-        StaticMedia(path='media/curr_level.png', type=ContentType.PHOTO),
+        StaticMedia(path='media/current_level.png', type=ContentType.PHOTO),
         SwitchTo(Const('Назад'), id='to_main', state=MainSG.main),
         state=MainSG.curr_level,
     ),

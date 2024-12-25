@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from config import settings
-from db.models import User, WaterLevel
+from db.models import Pressure, PumpCondition, User, WaterLevel
 from service.plots import plot_current_level
 from states import MainSG
 
@@ -32,7 +32,16 @@ async def on_current_level(callback: CallbackQuery, button, manager: DialogManag
         return
 
     if 100 >= curr_level.value >= 0:
-        plot_current_level(level=curr_level.value)
+        query = select(PumpCondition).order_by(PumpCondition.id.desc()).limit(1)
+        pump_condition = await session.scalar(query)
+        query = select(Pressure).order_by(Pressure.id.desc()).limit(1)
+        pressure = await session.scalar(query)
+
+        plot_current_level(
+            level=curr_level.value,
+            pump=pump_condition.condition,
+            pressure=pressure.value,
+        )
         await manager.switch_to(MainSG.curr_level)
     else:
         await callback.answer("Датчик неисправен!", show_alert=True)
