@@ -42,7 +42,7 @@ main = Dialog(
         state=MainSG.calendar
     ),
     Window(
-        StaticMedia(path='media/l_history.png', type=ContentType.PHOTO),
+        StaticMedia(path='media/archive_data.png', type=ContentType.PHOTO),
         SwitchTo(Const('Назад'), id='to_main', state=MainSG.main),
         state=MainSG.archive
     )

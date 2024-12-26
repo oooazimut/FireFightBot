@@ -1,11 +1,18 @@
+from datetime import date
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 from PIL import Image
+from sqlalchemy import Sequence
+
+from db.models import Pressure, WaterLevel
 
 
-def plot_current_level(level: int | float, pump: bool, pressure: float):
+def plot_current_level(level: int | float, pump: int, pressure: float):
+    pressure = 0 if pressure <= 0 else pressure
+
     def draw_water(axes: Axes, level: int | float):
         width = 467
         level *= 2.8
@@ -18,15 +25,48 @@ def plot_current_level(level: int | float, pump: bool, pressure: float):
         )
         axes.add_patch(water)
 
-    def draw_pressure(axes: Axes, pressure: float, pump: bool):
-        if pump or pressure > 0.4:
-            axes.text()
-        else:
-            axes.text()
+    def top_text(axes: Axes, pump: int):
+        s = ""
+        match pump:
+            case 1:
+                s = "работает насос!"
+            case 3:
+                s = "низкое давление!"
+        axes.text(100, 150, s, fontsize=30, color="red")
 
     plt.clf()
     fig, axes = plt.subplots()
     img = np.asarray(Image.open("media/curr_bg.png"))
     axes.imshow(img)
     draw_water(axes, level)
-    plt.savefig("media/current_level.png")
+    axes.text(600, 350, f"давление:\n{round(pressure, 2)} бар", fontsize=20)
+    top_text(axes, pump)
+    plt.title("Текущий уровень воды в пожарной емкости", fontsize=15)
+    plt.xticks([])
+    plt.yticks([])
+    fig.savefig("media/current_level.png")
+
+
+def plot_archive_levels(
+    levels: Sequence[WaterLevel],
+    pressures: Sequence[Pressure],
+    clicked_date: date,
+):
+    x_levels = np.array([level.dttm for level in levels])
+    y_levels = np.array([level.value for level in levels])
+
+    x_pressures = np.array([pressure.dttm for pressure in pressures])
+    y_pressures = np.array([0 if pressure.value <=0 else pressure.value for pressure in pressures])
+
+    fig, axes = plt.subplots(2, 1, sharex=True)
+    fig.suptitle(f"{clicked_date.isoformat}")
+    date_format = mdates.DateFormatter('%H:%M')
+    axes[1].xaxis.set_major_formatter(date_format)
+    axes[0].set_ylim(0, 100)
+    axes[1].set_ylim(0, 7)
+    axes[0].set_title('Уровень воды в емкости')
+    axes[1].set_title('Давление воды в системе')
+
+    axes[0].plot(x_levels, y_levels, marker='.')
+    axes[1].plot(x_pressures, y_pressures)
+    fig.savefig("media/archive_data.png")

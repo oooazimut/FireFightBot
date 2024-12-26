@@ -1,14 +1,14 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import ChatEvent, DialogManager
 from aiogram_dialog.widgets.kbd import ManagedCalendar
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from config import settings
 from db.models import Pressure, PumpCondition, User, WaterLevel
-from service.plots import plot_current_level
+from service.plots import plot_archive_levels, plot_current_level
 from states import MainSG
 
 
@@ -48,10 +48,23 @@ async def on_current_level(callback: CallbackQuery, button, manager: DialogManag
 
 
 async def on_date_clicked(
-    callback: ChatEvent,
+    callback: CallbackQuery,
     widget: ManagedCalendar,
     manager: DialogManager,
-    clicked_date: datetime.date,
+    clicked_date: date,
     /,
 ):
-    pass
+    session: AsyncSession = manager.middleware_data["session"]
+    query = select(WaterLevel).where(func.date(WaterLevel.dttm) == clicked_date.isoformat())
+    levels = await session.scalars(query)
+    levels = levels.all()
+    query = select(Pressure).where(func.date(Pressure.dttm) == clicked_date.isoformat())
+    pressures = await session.scalars(query)
+    pressures = pressures.all()
+
+    if levels or pressures:
+        plot_archive_levels(levels, pressures, clicked_date)
+        await manager.switch_to(MainSG.archive)
+    else:
+        await callback.answer('Данных нет', show_alert=True)
+    
