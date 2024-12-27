@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 import dialogs
 from config import settings
 from custom.media_storage import MediaIdStorage
-from jobs import poll_and_save
+from service.jobs import poll_and_save
 from middlewares import DbSessionMiddleware
 from routers import start_router
 from states import MainSG
@@ -39,6 +39,10 @@ async def main():
         settings.modbus.host,
         port=settings.modbus.port,
     )
+    bot = Bot(
+        token=settings.bot_token.get_secret_value(),
+        default=DefaultBotProperties(parse_mode="HTML"),
+    )
     scheduler = AsyncIOScheduler()
     scheduler.start()
     scheduler.add_job(
@@ -46,12 +50,7 @@ async def main():
         trigger="interval",
         seconds=15,
         id="polling",
-        args=[client, db_pool],
-    )
-
-    bot = Bot(
-        token=settings.bot_token.get_secret_value(),
-        default=DefaultBotProperties(parse_mode="HTML"),
+        args=[client, db_pool, bot],
     )
     storage = RedisStorage(
         Redis(),
