@@ -1,13 +1,14 @@
 from datetime import date, datetime, timedelta
 
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import ChatEvent, DialogManager
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import ManagedCalendar
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from config import settings
 from db.models import Pressure, PumpCondition, User, WaterLevel
+from db.repo import get_by_date, get_last
 from service.plots import plot_archive_levels, plot_current_level
 from states import MainSG
 
@@ -24,18 +25,15 @@ async def check_passwd(msg: Message, msg_inpt, manager: DialogManager):
 
 async def on_current_level(callback: CallbackQuery, button, manager: DialogManager):
     session: AsyncSession = manager.middleware_data["session"]
-    query = select(WaterLevel).order_by(WaterLevel.id.desc()).limit(1)
-    curr_level = await session.scalar(query)
+    curr_level = await get_last(session, [WaterLevel])
+    curr_level = curr_level[0]
 
     if not curr_level or curr_level.dttm < datetime.now() - timedelta(minutes=5):
         await callback.answer("Нет свежих данных", show_alert=True)
         return
 
     if 100 >= curr_level.value >= 0:
-        query = select(PumpCondition).order_by(PumpCondition.id.desc()).limit(1)
-        pump_condition = await session.scalar(query)
-        query = select(Pressure).order_by(Pressure.id.desc()).limit(1)
-        pressure = await session.scalar(query)
+        pump_condition, pressure = await get_last(session, [PumpCondition, Pressure])
 
         plot_current_level(
             level=curr_level.value,
@@ -55,16 +53,10 @@ async def on_date_clicked(
     /,
 ):
     session: AsyncSession = manager.middleware_data["session"]
-    query = select(WaterLevel).where(func.date(WaterLevel.dttm) == clicked_date.isoformat())
-    levels = await session.scalars(query)
-    levels = levels.all()
-    query = select(Pressure).where(func.date(Pressure.dttm) == clicked_date.isoformat())
-    pressures = await session.scalars(query)
-    pressures = pressures.all()
+    levels, pressures = await get_by_date(session, clicked_date, [WaterLevel, Pressure])
 
     if levels or pressures:
         plot_archive_levels(levels, pressures, clicked_date)
         await manager.switch_to(MainSG.archive)
     else:
-        await callback.answer('Данных нет', show_alert=True)
-    
+        await callback.answer("Данных нет", show_alert=True)
