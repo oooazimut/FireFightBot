@@ -26,12 +26,12 @@ def plot_current_level(level: int | float, pump: int, pressure: float):
         axes.add_patch(water)
 
     def top_text(axes: Axes, pump: int):
-        s = ""
-        match pump:
-            case 1:
-                s = "работает насос!"
-            case 3:
-                s = "низкое давление!"
+        if not pump:
+            return
+
+        s = "работает насос!"
+        if pump > 1:
+            s += "\nнизкое давление!"
         axes.text(100, 150, s, fontsize=30, color="red")
 
     plt.clf()
@@ -56,17 +56,21 @@ def plot_archive_levels(
     y_levels = np.array([level.value for level in levels])
 
     x_pressures = np.array([pressure.dttm for pressure in pressures])
-    y_pressures = np.array([0 if pressure.value <=0 else pressure.value for pressure in pressures])
+    y_pressures = np.array([
+        0 if pressure.value <= 0 else pressure.value for pressure in pressures
+    ])
 
     fig, axes = plt.subplots(2, 1, sharex=True)
-    fig.suptitle(f"{clicked_date.isoformat}")
-    date_format = mdates.DateFormatter('%H:%M')
+    fig.suptitle(f"{clicked_date.isoformat()}")
+    date_format = mdates.DateFormatter("%H:%M")
     axes[1].xaxis.set_major_formatter(date_format)
     axes[0].set_ylim(0, 100)
     axes[1].set_ylim(0, 7)
-    axes[0].set_title('Уровень воды в емкости')
-    axes[1].set_title('Давление воды в системе')
+    axes[0].set_title("Уровень воды в емкости")
+    axes[1].set_title("Давление воды в системе")
+    axes[0].grid()
+    axes[1].grid()
 
-    axes[0].plot(x_levels, y_levels, marker='.')
+    axes[0].plot(x_levels, y_levels)
     axes[1].plot(x_pressures, y_pressures)
     fig.savefig("media/archive_data.png")
