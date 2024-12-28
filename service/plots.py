@@ -45,6 +45,7 @@ def plot_current_level(level: int | float, pump: int, pressure: float):
     plt.xticks([])
     plt.yticks([])
     fig.savefig("media/current_level.png")
+    plt.close()
 
 
 def plot_archive_levels(
@@ -74,3 +75,4 @@ def plot_archive_levels(
     axes[0].plot(x_levels, y_levels)
     axes[1].plot(x_pressures, y_pressures)
     fig.savefig("media/archive_data.png")
+    plt.close()
