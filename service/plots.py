@@ -45,7 +45,7 @@ def plot_current_level(level: int | float, pump: int, pressure: float):
     plt.xticks([])
     plt.yticks([])
     fig.savefig("media/current_level.png")
-    plt.close()
+    plt.close(fig)
 
 
 def plot_archive_levels(
@@ -65,7 +65,7 @@ def plot_archive_levels(
     fig.suptitle(f"{clicked_date.isoformat()}")
     date_format = mdates.DateFormatter("%H:%M")
     axes[1].xaxis.set_major_formatter(date_format)
-    axes[0].set_ylim(0, 100)
+    axes[0].set_ylim(0, 110)
     axes[1].set_ylim(0, 7)
     axes[0].set_title("Уровень воды в емкости")
     axes[1].set_title("Давление воды в системе")
@@ -75,4 +75,4 @@ def plot_archive_levels(
     axes[0].plot(x_levels, y_levels)
     axes[1].plot(x_pressures, y_pressures)
     fig.savefig("media/archive_data.png")
-    plt.close()
+    plt.close(fig)

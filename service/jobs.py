@@ -24,6 +24,7 @@ async def check_pump(bot: Bot, session: AsyncSession, pump_condition: int):
 async def poll_and_save(client: ModbusBaseClient, db_pool: sessionmaker, bot: Bot):
     rr = await poll_registers(client, 16384, 5)
     if rr:
+        rr[0] = 100 if 200 > rr[0] > 100 else rr[0]
         water_level = WaterLevel(value=rr[0])
         temp = rr[2:4]
         temp.reverse()
