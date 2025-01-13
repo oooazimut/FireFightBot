@@ -38,6 +38,9 @@ async def main():
     client = AsyncModbusTcpClient(
         settings.modbus.host,
         port=settings.modbus.port,
+        retries=2,
+        reconnect_delay=0.5,
+        reconnect_delay_max=2.0
     )
     bot = Bot(
         token=settings.bot_token.get_secret_value(),
