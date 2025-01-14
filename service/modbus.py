@@ -31,7 +31,6 @@ async def poll_registers(address, count) -> dict | None:
             reconnect_delay=0.5,
             reconnect_delay_max=0.5,
         ) as client:
-            await client.connect()
             if not client.connected:
                 logger.error("Нет соединения с ПР-103")
                 return
