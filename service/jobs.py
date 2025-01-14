@@ -21,19 +21,12 @@ async def check_pump(bot: Bot, session: AsyncSession, pump_condition: int):
         await started_pump_notification(bot, session)
 
 
-async def poll_and_save(client: ModbusBaseClient, db_pool: sessionmaker, bot: Bot):
-    rr = await poll_registers(client, 16384, 5)
+async def poll_and_save(db_pool: sessionmaker, bot: Bot):
+    rr = await poll_registers(16384, 5)
     if rr:
-        rr[0] = 100 if 200 > rr[0] > 100 else rr[0]
-        water_level = WaterLevel(value=rr[0])
-        temp = rr[2:4]
-        temp.reverse()
-        pressure = Pressure(
-            value=client.convert_from_registers(
-                temp, data_type=client.DATATYPE.FLOAT32
-            ),
-        )
-        pump_condition = PumpCondition(condition=rr[-1])
+        water_level = WaterLevel(value=rr["water_level"])
+        pressure = Pressure(value=rr["pressure"])
+        pump_condition = PumpCondition(condition=rr["pump_condition"])
 
         async with db_pool() as session:
             await check_pump(bot, session, pump_condition.condition)

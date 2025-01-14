@@ -10,16 +10,15 @@ from aiogram.types import ErrorEvent
 from aiogram_dialog import DialogManager, StartMode, setup_dialogs
 from aiogram_dialog.api.exceptions import OutdatedIntent, UnknownIntent
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pymodbus.client import AsyncModbusTcpClient
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import dialogs
 from config import settings
 from custom.media_storage import MediaIdStorage
-from service.jobs import poll_and_save
 from middlewares import DbSessionMiddleware
 from routers import start_router
+from service.jobs import poll_and_save
 from states import MainSG
 
 
@@ -35,13 +34,7 @@ async def main():
     )
     engine = create_async_engine(settings.sqlite_async_dsn, echo=False)
     db_pool = async_sessionmaker(engine, expire_on_commit=False)
-    client = AsyncModbusTcpClient(
-        settings.modbus.host,
-        port=settings.modbus.port,
-        retries=2,
-        reconnect_delay=0.5,
-        reconnect_delay_max=2.0
-    )
+
     bot = Bot(
         token=settings.bot_token.get_secret_value(),
         default=DefaultBotProperties(parse_mode="HTML"),
@@ -53,7 +46,7 @@ async def main():
         trigger="interval",
         seconds=15,
         id="polling",
-        args=[client, db_pool, bot],
+        args=[db_pool, bot],
     )
     storage = RedisStorage(
         Redis(),
