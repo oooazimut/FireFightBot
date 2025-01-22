@@ -1,9 +1,5 @@
-# from pathlib import Path
-
 from pydantic import BaseModel, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-# BASE_DIR = Path(__file__).resolve().parent
 
 
 class ModbusSettings(BaseModel):
@@ -17,11 +13,10 @@ class Settings(BaseSettings):
     modbus: ModbusSettings
     password: SecretStr
 
-
     @property
     def sqlite_async_dsn(self):
         return f"sqlite+aiosqlite:///{self.db_name}"
-    
+
     @property
     def sqlite_dsn(self):
         return f"sqlite:///{self.db_name}"

@@ -3,7 +3,6 @@ from datetime import date, datetime, timedelta
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import ManagedCalendar
-from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from config import settings
