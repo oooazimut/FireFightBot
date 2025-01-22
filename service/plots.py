@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from matplotlib.axes import Axes
 from matplotlib.patches import Rectangle
 import matplotlib.pyplot as plt
@@ -53,6 +53,7 @@ def plot_archive_levels(
     pressures: Sequence[Pressure],
     clicked_date: date,
 ):
+    interval = clicked_date - timedelta(days=7)
     x_levels = np.array([level.dttm for level in levels])
     y_levels = np.array([level.value for level in levels])
 
@@ -62,8 +63,8 @@ def plot_archive_levels(
     ])
 
     fig, axes = plt.subplots(2, 1, sharex=True)
-    fig.suptitle(f"{clicked_date.isoformat()}")
-    date_format = mdates.DateFormatter("%H:%M")
+    fig.suptitle(f"{interval.isoformat()} - {clicked_date.isoformat()}")
+    date_format = mdates.DateFormatter("%m.%d")
     axes[1].xaxis.set_major_formatter(date_format)
     axes[0].set_ylim(0, 110)
     axes[1].set_ylim(0, 7)

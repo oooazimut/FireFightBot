@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,9 +13,10 @@ async def get_last(session: AsyncSession, tables: list):
 
 
 async def get_by_date(session: AsyncSession, selected_date: date, models: list):
+    interval = selected_date - timedelta(days=7)
     result = []
     for model in models:
-        query = select(model).where(func.date(model.dttm) == selected_date.isoformat())
+        query = select(model).filter(func.date(model.dttm).between(interval, selected_date))
         data = await session.scalars(query)
         result.append(data.all())
     return result
