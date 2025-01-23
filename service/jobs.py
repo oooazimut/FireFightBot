@@ -25,12 +25,15 @@ async def poll_and_save(db_pool: sessionmaker, bot: Bot):
     rr = await poll_registers(16384, 5)
     if rr:
         water_level = WaterLevel(value=rr["water_level"])
-        pressure = Pressure(value=rr["pressure"])
         pump_condition = PumpCondition(condition=rr["pump_condition"])
+        data = [water_level, pump_condition]
+        if rr['pressure'] > 0:
+            pressure = Pressure(value=rr["pressure"])
+            data.append(pressure)
 
         async with db_pool() as session:
             await check_pump(bot, session, pump_condition.condition)
-            session.add_all([pressure, water_level, pump_condition])
+            session.add_all(data)
             await session.commit()
     else:
         logger.error("Не получены данные по модбас!")
