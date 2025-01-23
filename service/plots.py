@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
 from PIL import Image
-from sqlalchemy import Sequence
-
-from db.models import Pressure, WaterLevel
 
 
 def plot_current_level(level: int | float, pump: int, pressure: float):
@@ -49,31 +46,31 @@ def plot_current_level(level: int | float, pump: int, pressure: float):
 
 
 def plot_archive_levels(
-    levels: Sequence[WaterLevel],
-    pressures: Sequence[Pressure],
+    levels,
+    pressures,
     clicked_date: date,
 ):
+    def draw_plot(data, title, axes: Axes, max_ylimit):
+        x_values = np.array([i.dttm for i in data])
+        y_values = np.array([i.value for i in data])
+        axes.set_ylim(0, max_ylimit)
+        axes.grid()
+        axes.set_title(title)
+        axes.plot(x_values, y_values)
+
     interval = clicked_date - timedelta(days=7)
-    x_levels = np.array([level.dttm for level in levels])
-    y_levels = np.array([level.value for level in levels])
-
-    x_pressures = np.array([pressure.dttm for pressure in pressures])
-    y_pressures = np.array([
-        0 if pressure.value <= 0 else pressure.value for pressure in pressures
-    ])
-
-    fig, axes = plt.subplots(2, 1, sharex=True)
-    fig.suptitle(f"{interval.isoformat()} - {clicked_date.isoformat()}")
     date_format = mdates.DateFormatter("%m.%d")
-    axes[1].xaxis.set_major_formatter(date_format)
-    axes[0].set_ylim(0, 110)
-    axes[1].set_ylim(0, 7)
-    axes[0].set_title("Уровень воды в емкости")
-    axes[1].set_title("Давление воды в системе")
-    axes[0].grid()
-    axes[1].grid()
 
-    axes[0].plot(x_levels, y_levels)
-    axes[1].plot(x_pressures, y_pressures)
+    if pressures:
+        fig, axes = plt.subplots(2, 1, sharex=True)
+        axes[0].xaxis.set_major_formatter(date_format)
+        draw_plot(levels, "Уровень воды в емкости", axes[0], 110)
+        draw_plot(pressures, "Давление воды в системе", axes[1], 7)
+    else:
+        fig, ax = plt.subplots(1, 1)
+        ax.xaxis.set_major_formatter(date_format)
+        draw_plot(levels, "Уровень воды в емкости", ax, 110)
+    
+    fig.suptitle(f"{interval.isoformat()} - {clicked_date.isoformat()}")
     fig.savefig("media/archive_data.png")
     plt.close(fig)

@@ -54,7 +54,7 @@ async def on_date_clicked(
     session: AsyncSession = manager.middleware_data["session"]
     levels, pressures = await get_by_date(session, clicked_date, [WaterLevel, Pressure])
 
-    if levels or pressures:
+    if levels:
         plot_archive_levels(levels, pressures, clicked_date)
         await manager.switch_to(MainSG.archive)
     else:

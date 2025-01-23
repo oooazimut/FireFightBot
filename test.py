@@ -1,2 +1,6 @@
-a = [1, 2, 3, 4, 5, 6]
-print(a[2:4])
+import sqlite3 as sq
+
+
+with sq.connect('FireFight.db') as conn:
+    conn.execute('delete from pressures')
+    conn.commit()
