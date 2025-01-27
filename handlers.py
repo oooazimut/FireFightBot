@@ -33,6 +33,8 @@ async def on_current_level(callback: CallbackQuery, button, manager: DialogManag
 
     if 100 >= curr_level.value >= 0:
         pump_condition, pressure = await get_last(session, [PumpCondition, Pressure])
+        if not pressure:
+            pressure = Pressure(value=0)
 
         plot_current_level(
             level=curr_level.value,
