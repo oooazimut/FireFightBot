@@ -27,12 +27,9 @@ async def poll_and_save(db_pool: sessionmaker, bot: Bot):
         water_level = WaterLevel(value=rr["water_level"])
         pump_condition = PumpCondition(condition=rr["pump_condition"])
         data = [water_level, pump_condition]
-        # if rr['pressure'] > 0:
-        pressure = Pressure(value=rr["pressure"])
-        logger.error(
-            f'Насос {"ON" if rr["pump_condition"] else "OFF"}. Давление в системе: {rr["pressure"]}'
-        )
-        data.append(pressure)
+        if rr['pressure'] > 0:
+            pressure = Pressure(value=rr["pressure"])
+            data.append(pressure)
 
         async with db_pool() as session:
             await check_pump(bot, session, pump_condition.condition)
