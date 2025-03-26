@@ -33,7 +33,6 @@ async def on_current_level(callback: CallbackQuery, button, manager: DialogManag
 
     if 100 >= curr_level.value >= 0:
         pump_condition, pressure = await get_last(session, [PumpCondition, Pressure])
-        print(pressure.value, pressure.dttm)
         if not pressure or pressure.dttm < (datetime.now() - timedelta(seconds=20)):
             pressure = Pressure(value=0)
 
