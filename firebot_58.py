@@ -44,7 +44,7 @@ async def main():
     scheduler.add_job(
         poll_and_save,
         trigger="interval",
-        seconds=1,
+        seconds=15,
         id="polling",
         args=[db_pool, bot],
     )
