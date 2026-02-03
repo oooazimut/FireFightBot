@@ -4,7 +4,7 @@ from enum import IntEnum
 import json
 from typing import Callable, List
 
-from domain.models import Facility, Pump, Tank
+from domain.models import Sprinkler
 
 
 class Registers(IntEnum):
@@ -25,26 +25,21 @@ def get_bit(mask: int, bit: int) -> bool:
     return bool(mask & (1 << bit))
 
 
-def to_domain_model(registers: List, to_float: Callable) -> Facility:
+def to_domain_model(registers: List, to_float: Callable) -> Sprinkler:
     mask = registers[Registers.MASK]
     level = registers[Registers.LEVEL]
-    tank = Tank(level=100 if 200 > level > 100 else level)
-    pump = Pump(
-        pressure=to_float(registers[PRESSURE]),
-        is_working=get_bit(mask, Bits.RUN),
-        crit_pressure=get_bit(mask, Bits.CRIT_PRESSURE),
-    )
 
-    return Facility(datetime.now(), tank, pump, get_bit(mask, Bits.SENSOR_FAULT))
+    return Sprinkler(
+        tank_level=100 if 200 > level > 100 else level,
+        pressure=to_float(registers[PRESSURE]),
+        crit_pressure=get_bit(mask, Bits.CRIT_PRESSURE),
+        pump_is_running=get_bit(mask, Bits.RUN),
+        sensor_fault=get_bit(mask, Bits.SENSOR_FAULT),
+    )
 
 
 def to_json(obj) -> str:
-    def selialize(o):
-        if isinstance(o, datetime):
-            return o.isoformat()
-        raise TypeError(f"Type {type(o)} not selializeble")
-
     if is_dataclass(obj):
-        return json.dumps(asdict(obj), default=selialize)
+        return json.dumps(asdict(obj))
     else:
         raise TypeError("Object is not dataclass")

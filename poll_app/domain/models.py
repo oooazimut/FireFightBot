@@ -3,20 +3,10 @@ from datetime import datetime
 
 
 @dataclass(frozen=True)
-class Pump:
+class Sprinkler:
+    tank_level: float
     pressure: float
-    is_working: bool
     crit_pressure: bool
-
-
-@dataclass(frozen=True)
-class Tank:
-    level: float
-
-
-@dataclass(frozen=True)
-class Facility:
-    timestamp: datetime
-    tank: Tank
-    pump: Pump
+    pump_is_running: bool
     sensor_fault: bool
+    timestamp: datetime | None = None

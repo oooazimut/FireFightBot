@@ -12,7 +12,7 @@ class PGSettings(BaseModel):
     port: str
     db_name: str
     user: str
-    passw: str
+    passw: SecretStr
 
 
 class Settings(BaseSettings):

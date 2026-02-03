@@ -9,5 +9,5 @@ class CacheSetter(Protocol):
     def set(self, data): ...
 
 
-class FacilityRepo(Protocol):
+class SprinklerRepo(Protocol):
     def add(self, data): ...
